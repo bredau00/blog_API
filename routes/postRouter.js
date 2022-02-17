@@ -1,13 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
+const con = require('../dbconnections.js')
+const authenticateToken = require('../auth.js')
 
-const con = mysql.createConnection({
-  host: "localhost",
-  user: "lifechoices",
-  password: "@Lifechoices1234",
-  database: "personal_blog",
-});
+function getToday() {
+  let today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+  const yyyy = today.getFullYear();
+
+  today = mm + "/" + dd + "/" + yyyy;
+
+  return today;
+}
 
 // posting post
 router.post('/', (req, res) => {
@@ -17,7 +23,7 @@ router.post('/', (req, res) => {
     var sql = `INSERT INTO posts (post_title, post_body, post_date, post_author) VALUES ('${title}', '${body}', '${date}', '${author}')`;
       con.query(sql, function (err, result) {
         if (err) throw err;
-        console.log("1 record inserted");
+        console.log("posting post");
     });
 })
 
@@ -26,7 +32,7 @@ router.get('/', (req, res, next)=>{
   var sql = `SELECT * FROM posts`;
     con.query(sql, function (err, result) {
       if (err) throw err;
-      console.log("1 record inserted");
+      console.log("got all posts");
       res.send(result)
     });
 })
@@ -46,7 +52,7 @@ router.delete('/:id', (req, res, next)=>{
   var sql = `DELETE FROM posts WHERE posts_id=${req.params.id}`;
     con.query(sql, function (err, result) {
       if (err) throw err;
-      console.log("1 record inserted");
+      console.log("1 record deleted");
       res.send(result)
     });
 })
@@ -67,7 +73,7 @@ router.put('/:id', (req, res, next)=>{
   
     con.query(sql, function (err, result) {
       if (err) throw err;
-      console.log("1 record inserted");
+      console.log("1 record updated");
       res.send(result)
     });
   })

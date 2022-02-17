@@ -1,13 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-
-const con = mysql.createConnection({
-  host: "localhost",
-  user: "lifechoices",
-  password: "@Lifechoices1234",
-  database: "personal_blog",
-});
+const con = require('../dbconnections')
+const authenticateToken = require('../auth')
 
 // posting comment
 router.post('/', (req, res) => {

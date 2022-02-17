@@ -1,22 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-
-const con = mysql.createConnection({
-  host: "localhost",
-  user: "lifechoices",
-  password: "@Lifechoices1234",
-  database: "personal_blog",
-});
+const bcrypt = require('bcrypt') 
+const con = require('../dbconnections')
+const authenticateToken = require('../auth')
 
 // USER REGISTRATION
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     const {name, email, contact, password} = req.body;
     if (!name || !email || !contact || !password)
     res.status(400).send({ msg: "Not all fields have been submitted" })
-    var sql = `INSERT INTO users (user_name, user_email, user_contact, user_password) VALUES ('${name}', '${email}', '${contact}', '${password}')`;
+
+    const salt = await bcrypt.genSalt()
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    var sql = `INSERT INTO users (user_name, user_email, user_contact, user_password) VALUES ('${name}', '${email}', '${contact}', '${hashedPassword}')`;
       con.query(sql, function (err, result) {
         if (err) throw err;
+
         console.log("1 record inserted");
     });
 })
@@ -44,10 +45,22 @@ router.get('/:id', (req, res, next)=>{
 // SIGN IN USER
 router.patch("/", (req, res) => {
   const { email, password } = req.body;
-  var sql = `SELECT * FROM users WHERE user_email='${email}' AND user_password='${password}'`;
-    con.query(sql, function (err, result) {
+  var sql = `SELECT * FROM users WHERE user_email='${email}'`;
+    con.query(sql, async function (err, result) {
       if (err) throw err;
       console.log("1 record inserted");
+
+
+    const user = result[0]
+    console.log(user)
+    const match = await bcrypt.compare(password, user.user_password)
+    if (match) {
+      jwt.sign(JSON.stringify(user), process.env.SECRET_KEY)
+      res.send(user);
+    }
+    
+
+
       res.send(result)
     });
 })
@@ -84,5 +97,8 @@ router.put('/:id', (req, res, next)=>{
     res.send(result)
   });
 })
+
+//user login
+
 
 module.exports = router;
